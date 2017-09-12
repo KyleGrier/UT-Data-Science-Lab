@@ -15,3 +15,5 @@ p3_cool = np.matmul(A_next, p3)
 print("P1 = " + str(p1_cool))
 print("P2 = " + str(p2_cool))
 print("P3 = " + str(p3_cool))
+
+#https://ocw.mit.edu/courses/mathematics/18-06sc-linear-algebra-fall-2011/least-squares-determinants-and-eigenvalues/projections-onto-subspaces/MIT18_06SCF11_Ses2.2sum.pdf
