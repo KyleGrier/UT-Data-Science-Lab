@@ -23,7 +23,7 @@ X_train, X_test, y_train, y_test = train_test_split(X,y,test_size=0.3,stratify=y
 num_threads = [1, 16, 32]
 for n in num_threads:
 	start = time.time()
-	model = XGBClassifier(nthread=n)
+	model = xgb.XGBClassifier(nthread=n)
 	model.fit(X, y)
 	elapsed = time.time() - start
 	print(n, elapsed)
