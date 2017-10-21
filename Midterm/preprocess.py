@@ -14,7 +14,7 @@ def fixNaN(df, cols, replace):
 
 # Remove columns in df based on the labels in to_remove
 def removeCols(df):
-	to_remove = ['F19']
+	to_remove = ['F19', 'F8', 'F17', 'F24', 'F1', 'F4', 'F15', 'F7', 'F20', 'F12', 'F13']
 	df = df.drop(to_remove, 1)
 	return df
 
@@ -34,13 +34,19 @@ def showCounts(X):
 		feat_percent[col] = largest/len_feat
 	return feat_percent
 
+# Scale features
+def scale(X):
+	scaler = StandardScaler()
+	X_scale = pd.DataFrame(scaler.fit_transform(X),columns=X.columns)
+	return X_scale
+
 # Do preprocessing for the training set
 def preprocess_train():
 	train = pd.read_csv("train_final.csv")
 	X, y = getXy(train)
 
 	X = removeCols(X)
-
+	X = scale(X)
 	# cols and replace have to be same length
 	cols = ['F5']
 	replace = [0.0]
