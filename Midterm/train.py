@@ -25,7 +25,7 @@ X_train, X_test, y_train, y_test = train_test_split(X,y,test_size=0.3,stratify=y
 #cv_params = {'max_depth': [3,5,7]}
 cv_params = {'learning_rate': [0.1, 0.01], 'subsample': [0.7,0.8,0.9]}
 ind_params = {'n_estimators': 1000, 'seed':0, 'colsample_bytree': 0.8, 
-             'objective': 'binary:logistic','nthread':16, 'max_depth':3
+             'objective': 'binary:logistic','nthread':16, 'max_depth':3,
              'learning_rate':0.1, 'subsample':0.4, 'min_child_weight':3}
 
 
