@@ -7,6 +7,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split, StratifiedKFold
 from preprocess import preprocess_train
 from sklearn.model_selection import GridSearchCV
+import time
 
 #Get base accuracy
 #all_zero = np.zeros(train['id'].count())
@@ -19,6 +20,21 @@ X, y = preprocess_train()
 kf = StratifiedKFold(n_splits=5, random_state=1)
 X_train, X_test, y_train, y_test = train_test_split(X,y,test_size=0.3,stratify=y)
 
+num_threads = [1, 16, 32]
+for n in num_threads:
+	start = time.time()
+	model = XGBClassifier(nthread=n)
+	model.fit(X, y)
+	elapsed = time.time() - start
+	print(n, elapsed)
+	results.append(elapsed)
+
+
+ 
+
+
+#XGBoost
+'''
 cv_params = {'max_depth': [3,5,7], 'min_child_weight': [1,3,5]}
 #cv_params = {'learning_rate': [0.1, 0.01], 'subsample': [0.7,0.8,0.9]}
 ind_params = {'n_estimators': 1000, 'seed':0, 'colsample_bytree': 0.8, 
@@ -26,12 +42,10 @@ ind_params = {'n_estimators': 1000, 'seed':0, 'colsample_bytree': 0.8,
 
 opt_xgb = GridSearchCV(xgb.XGBClassifier(**ind_params), 
                             cv_params, 
-                             scoring = 'accuracy', cv = kf, n_jobs= -1) 
-
+                             scoring = 'accuracy', cv = kf, n_jobs= -1)
 opt_xgb.fit(X, y)
 print(opt_xgb.grid_scores_)
-#XGBoost
-'''
+
 for train_idx, test_idx in kf.split(X,y):
     dtrain = xgb.DMatrix()
     dtest = xgb.DMatrix('demo/data/agaricus.txt.test')
