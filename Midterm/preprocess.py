@@ -46,11 +46,11 @@ def preprocess_train():
 	X, y = getXy(train)
 
 	X = removeCols(X)
-	X = scale(X)
 	# cols and replace have to be same length
 	cols = ['F5']
 	replace = [0.0]
 	X = fixNaN(X, cols, replace)
+	X = scale(X)
 	return X, y
 
 
