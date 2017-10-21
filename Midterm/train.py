@@ -24,8 +24,22 @@ X_train, X_test, y_train, y_test = train_test_split(X,y,test_size=0.3,stratify=y
 #cv_params = {'max_depth': [3,5,7], 'min_child_weight': [1,3,5]}
 #cv_params = {'max_depth': [3,5,7]}
 cv_params = {'learning_rate': [0.1, 0.01], 'subsample': [0.7,0.8,0.9]}
-ind_params = {'n_estimators': 100, 'seed':0, 'colsample_bytree': 0.8, 
-             'objective': 'binary:logistic','nthread':16, 'max_depth':3}
+ind_params = {'n_estimators': 1000, 'seed':0, 'colsample_bytree': 0.8, 
+             'objective': 'binary:logistic','nthread':16, 'max_depth':3
+             'learning_rate':0.1, 'subsample':0.4, 'min_child_weight':3}
+
+
+start = time.time()
+for train_idx, test_idx in kf.split(X,y):
+    model = xgb.XGBClassifier(**ind_params) 
+    model.fit(X.iloc[train_idx], y.iloc[train_idx])
+    y_pred = model.predict(X.iloc[test_idx])
+    print(accuracy_score(y.iloc[test_idx], y_pred))
+elapsed = time.time() - start
+print(elapsed)
+
+#XGBoost
+'''
 start = time.time()
 opt_xgb = GridSearchCV(xgb.XGBClassifier(**ind_params), 
                             cv_params, 
@@ -36,10 +50,6 @@ elapsed = time.time() - start
 print(elapsed)
 print(opt_xgb.grid_scores_)
 
-
-
-#XGBoost
-'''
 start = time.time()
 for train_idx, test_idx in kf.split(X,y):
     model = xgb.XGBClassifier(**ind_params) 
