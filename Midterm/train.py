@@ -28,8 +28,21 @@ for n in num_threads:
 	elapsed = time.time() - start
 	print(n, elapsed)
 
+#cv_params = {'max_depth': [3,5,7], 'min_child_weight': [1,3,5]}
+cv_params = {'max_depth': [3,5,7]}
+#cv_params = {'learning_rate': [0.1, 0.01], 'subsample': [0.7,0.8,0.9]}
+ind_params = {'n_estimators': 1000, 'seed':0, 'colsample_bytree': 0.8, 
+             'objective': 'binary:logistic'}
+start = time.time()
+opt_xgb = GridSearchCV(xgb.XGBClassifier(**ind_params), 
+                            cv_params, 
+                             scoring = 'accuracy', cv = kf, nthread=16)
 
- 
+elapsed = time.time() - start
+print(n, elapsed)
+
+opt_xgb.fit(X, y)
+print(opt_xgb.grid_scores_)
 
 
 #XGBoost
