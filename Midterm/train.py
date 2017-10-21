@@ -33,17 +33,24 @@ cv_params = {'max_depth': [3,5,7]}
 #cv_params = {'learning_rate': [0.1, 0.01], 'subsample': [0.7,0.8,0.9]}
 ind_params = {'n_estimators': 1000, 'seed':0, 'colsample_bytree': 0.8, 
              'objective': 'binary:logistic','nthread':16}
+#start = time.time()
+#opt_xgb = GridSearchCV(xgb.XGBClassifier(**ind_params), 
+                            #cv_params, 
+                             #scoring = 'accuracy', cv = kf, n_jobs=-1)
+
+#opt_xgb.fit(X, y)
+#elapsed = time.time() - start
+#print(elapsed)
+#print(opt_xgb.grid_scores_)
+
 start = time.time()
-opt_xgb = GridSearchCV(xgb.XGBClassifier(**ind_params), 
-                            cv_params, 
-                             scoring = 'accuracy', cv = kf, n_jobs=-1)
-
+for train_idx, test_idx in kf.split(X,y):
+    model = xgb.XGBClassifier(**ind_params) 
+    model.fit(X.iloc[train_idx], y.iloc[train_idx])
+    y_pred = model.predict(X.iloc[test_idx])
+    print(accuracy_score(y.iloc[test_idx], y_pred))
 elapsed = time.time() - start
-print(n, elapsed)
-
-opt_xgb.fit(X, y)
-print(opt_xgb.grid_scores_)
-
+print(elapsed)
 
 #XGBoost
 '''
