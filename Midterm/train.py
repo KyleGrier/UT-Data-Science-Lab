@@ -27,7 +27,6 @@ for n in num_threads:
 	model.fit(X, y)
 	elapsed = time.time() - start
 	print(n, elapsed)
-	results.append(elapsed)
 
 
  
