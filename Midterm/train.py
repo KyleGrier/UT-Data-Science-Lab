@@ -26,7 +26,7 @@ cv_params = {'max_depth': [3,5,7]}
 #cv_params = {'learning_rate': [0.1, 0.01], 'subsample': [0.7,0.8,0.9]}
 ind_params = {'n_estimators': 100, 'seed':0, 'colsample_bytree': 0.8, 
              'objective': 'binary:logistic','nthread':16}
-#start = time.time()
+start = time.time()
 opt_xgb = GridSearchCV(xgb.XGBClassifier(**ind_params), 
                             cv_params, 
                             scoring = 'accuracy', cv = 5)
