@@ -1,8 +1,9 @@
 import numpy as np
 import pandas as pd
-from scipy.stats import skew
-from sklearn.preprocessing import StandardScaler
+from scipy.stats import skew, zscore
+from sklearn.preprocessing import StandardScaler, scale
 from collections import Counter
+from sklearn.decomposition import PCA
 
 # Fill the NaN locations for the columns given with the
 # replacement values given
@@ -14,7 +15,9 @@ def fixNaN(df, cols, replace):
 
 # Remove columns in df based on the labels in to_remove
 def removeCols(df):
-	to_remove = ['F19', 'F8', 'F17', 'F24', 'F1', 'F4', 'F15', 'F7', 'F20', 'F12', 'F13']
+	#to_remove = ['F19', 'F8', 'F17', 'F24', 'F1', 'F4', 'F15', 'F7', 'F20', 'F12', 'F13']
+	#to_remove = ['F25', 'F4', 'F17', 'F20']
+	to_remove =  ['F1', 'F4', 'F7', 'F8','F12','F13','F15', 'F17', 'F20', 'F24', 'F26', 'F23']
 	df = df.drop(to_remove, 1)
 	return df
 
@@ -23,6 +26,12 @@ def getXy(df):
 	y = df['Y']
 	X = df.loc[:,'F1':'F27']
 	return X, y
+
+# Get the features and id to create final submission
+def getXid(df):
+	final = pd.DataFrame(df['id'])
+	X = df.loc[:,'F1':'F27']
+	return X, final
 
 # Show all features that are largely the same value
 def showCounts(X):
@@ -34,28 +43,59 @@ def showCounts(X):
 		feat_percent[col] = largest/len_feat
 	return feat_percent
 
+def removeOutliers(X,y):
+	keep = (np.abs(zscore(X)) < 6).all(axis=1)
+	X = X[keep]
+	y = y[keep]
+	return X, y
+
 # Scale features
-def scale(X):
+def toscale(X):
 	scaler = StandardScaler()
 	X_scale = pd.DataFrame(scaler.fit_transform(X),columns=X.columns)
+	for col in X_scale.columns:
+		#X_scale[col] = np.log1p(X_scale[col] + abs(X_scale[col]))
+		X_scale[col] = np.log1p(X[col] + abs(X[col]))
 	return X_scale
+
+def printSkew(X):
+	skewness = {}
+	for col in X.columns:
+ 		skewness[col] = skew(X[col])
+ 	print(str(skewness) + '\n')
+
+def featPCA(X):
+	pca = PCA()
+	X_reduced = pca.fit_transform(X)
+	print(X_reduced.shape)
+	print(np.cumsum(np.round(pca.explained_variance_ratio_, decimals=4)*100))
+	return X_reduced[:,:8]
 
 # Do preprocessing for the training set
 def preprocess_train():
 	train = pd.read_csv("train_final.csv")
 	X, y = getXy(train)
 
-	X = removeCols(X)
+	#X = removeCols(X)
 	# cols and replace have to be same length
-	cols = ['F5']
-	replace = [0.0]
+	cols = ['F5', 'F19']
+	replace = [0.0, 0]
 	X = fixNaN(X, cols, replace)
-	X = scale(X)
+	X = toscale(X)
+	#X, y = removeOutliers(X,y)
 	return X, y
 
 
 # Do preprocessing for the test set
 def preprocess_test():
-	return
+	test = pd.read_csv("test_final.csv")
+	X, final = getXid(test)
+	#X = removeCols(X)
+	# cols and replace have to be same length
+	cols = ['F5','F19']
+	replace = [0.0,0]
+	X = fixNaN(X, cols, replace)
+	X = toscale(X)
+	return X, final
 
 #if __name__ == "__main__":
