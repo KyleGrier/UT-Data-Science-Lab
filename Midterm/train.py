@@ -190,20 +190,20 @@ if __name__ == "__main__":
 
 	xgb_model = createXGB(X_xgb, y_xgb)
 	log_model = LogisticRegression(penalty='l2', C= 18)
-	nn_model = KNeighborsClassifier(n_neighbors=5)
-	for_model = RandomForestClassifier(n_estimators=500, max_leaf_nodes=16, n_jobs=-1)
+	nn_model = KNeighborsClassifier(n_neighbors=3)
+	#for_model = RandomForestClassifier(n_estimators=500, max_leaf_nodes=16, n_jobs=-1)
 
 	xgb_model.fit(X_xgb,y_xgb)
 	nn_model.fit(X,y)
 	log_model.fit(X,y)
-	for_model.fit(X,y)
+	#for_model.fit(X,y)
 
 	xgb_pred_init = pd.DataFrame(xgb_model.predict(X_xgb), columns = ['XGB'])
 	nn_pred_init = pd.DataFrame(nn_model.predict(X), columns = ['NN'])
 	log_pred_init = pd.DataFrame(log_model.predict(X), columns = ['log'])
-	for_pred_init = pd.DataFrame(for_model.predict(X), columns = ['for'])
+	#for_pred_init = pd.DataFrame(for_model.predict(X), columns = ['for'])
 
-	train_this = pd.concat([nn_pred_init, log_pred_init, xgb_pred_init, for_pred_init],axis =1)
+	train_this = pd.concat([nn_pred_init, log_pred_init, xgb_pred_init],axis =1)
 
 	fin_mod = LogisticRegression()
 	fin_mod.fit(train_this,y)
@@ -211,9 +211,9 @@ if __name__ == "__main__":
 	xgb_pred_test = pd.DataFrame(xgb_model.predict(X_test_xgb), columns = ['XGB'])
 	nn_pred_test = pd.DataFrame(nn_model.predict(X_test), columns = ['NN'])
 	log_pred_test = pd.DataFrame(log_model.predict(X_test), columns = ['log'])
-	for_pred_test = pd.DataFrame(for_model.predict(X_test), columns = ['for'])
+	#for_pred_test = pd.DataFrame(for_model.predict(X_test), columns = ['for'])
 
-	fin_pred = pd.concat([nn_pred_test, log_pred_test, xgb_pred_test, for_pred_test], axis=1)
+	fin_pred = pd.concat([nn_pred_test, log_pred_test, xgb_pred_test], axis=1)
 	pred = fin_mod.predict(fin_pred)
 
 	print(len(pred[pred == 1]))
