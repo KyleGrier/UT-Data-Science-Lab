@@ -27,11 +27,11 @@ def getBase(y):
 cv_params = {'learning_rate': [0.1, 0.01], 'subsample': [0.7,0.8,0.9]}
 
 param_test1 = {
- 'gamma':[i/10.0 for i in range(0,5)]}
+ 'max_depth':[3,4,5,6,7]}
 
 ind_params = {'n_estimators': 100, 'seed':0, 'colsample_bytree': 0.8, 
-             'objective': 'binary:logistic','nthread':16, 'max_depth' : 5,
-             'learning_rate':0.1, 'subsample':0.8, 'min_child_weight':3,
+             'objective': 'binary:logistic','nthread':16, 'max_depth' :5,
+             'learning_rate':0.1, 'subsample':0.4	, 'min_child_weight':3,
              'gamma':0}
 
 def doGridCV(X,y):
@@ -140,6 +140,7 @@ if __name__ == "__main__":
 	doGridCV(X, y)
 	#LogisticCV(X, y)
 	#model = createXGB(X, y)
+	#doKfold(X,y,model)
 	#print(model.feature_importances_)
 	#model = LogisticRegression(penalty='l2', C= 0.1)
 	#model = LinearSVC(random_state=0)
