@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 from scipy.stats import skew, zscore
 from sklearn.preprocessing import StandardScaler, scale
 from collections import Counter

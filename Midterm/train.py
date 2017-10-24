@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 import xgboost as xgb
 import time
 from sklearn.metrics import accuracy_score
@@ -26,7 +27,7 @@ def getBase(y):
 cv_params = {'learning_rate': [0.1, 0.01], 'subsample': [0.7,0.8,0.9]}
 
 param_test1 = {
- 'max_depth':[5,6,7,8]}
+ 'min_child_weight':[6,8,10,12]}
 
 ind_params = {'n_estimators': 100, 'seed':0, 'colsample_bytree': 0.8, 
              'objective': 'binary:logistic','nthread':16, 'max_depth' : 5,
@@ -124,7 +125,7 @@ def plotLDA(X, y):
 	fig = plt.figure()
 	ax = fig.add_subplot(111)
 
-	ax.scatter(label1_sk, np.ones(len(label1_sk)), c='r', marker='o', label="label1")
+	ax.scatter(label1_sk, np.zeros(len(label1_sk)), c='r', marker='o', label="label1")
 	ax.scatter(label2_sk, np.ones(len(label2_sk)), c='b', marker='x', label="label2")
 	ax.legend()
 	plt.show()
@@ -135,6 +136,7 @@ if __name__ == "__main__":
 	getBase(y)
 	X_test, final = preprocess_test()
 	printSkew(X)
+	#plotLDA(X,y)
 	doGridCV(X, y)
 	#LogisticCV(X, y)
 	#model = createXGB(X, y)
