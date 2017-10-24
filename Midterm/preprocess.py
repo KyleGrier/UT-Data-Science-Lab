@@ -131,7 +131,7 @@ def preprocess_train_lda(with_pca=False):
 	X = removeCols(X, list(worst_cols))
 	X = removeCols(X, list(best_cols))
 	if with_pca:
-		X = featPCA(X, 6, 'better', verbose=True)
+		X = featPCA(X, 5, 'better', verbose=True)
 	X = pd.concat([X, X_worst, X_best], axis=1)
 	return X, y, lda
 
@@ -160,7 +160,7 @@ def preprocess_test_lda(with_pca=False, a_lda = None):
 	X = removeCols(X, list(worst_cols))
 	X = removeCols(X, list(best_cols))
 	if with_pca:
-		X = featPCA(X, 6, 'better')
+		X = featPCA(X, 5, 'better')
 	X = pd.concat([X, X_worst, X_best], axis=1)
 	return X, final
 
