@@ -6,13 +6,17 @@ import time
 from sklearn.metrics import accuracy_score
 from sklearn.linear_model import LogisticRegression, Ridge, RidgeCV, Lasso, LassoCV
 from sklearn.model_selection import train_test_split, StratifiedKFold, cross_val_score
-from preprocess import preprocess_train, preprocess_test, featPCA, printSkew
+from preprocess import preprocess_train, preprocess_test, featPCA, printSkew, preprocess_train_lda, preprocess_test_lda
 from sklearn.model_selection import GridSearchCV
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.svm import LinearSVC
 import time
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import confusion_matrix
 
 #Get base accuracy
 #all_zero = np.zeros(train['id'].count())
@@ -40,9 +44,9 @@ cv_params = {'learning_rate': [0.1, 0.01], 'subsample': [0.7,0.8,0.9]}
 param_test1 = {
  'min_child_weight':[3,4,5,6,7]}
 
-ind_params = {'n_estimators': 20000, 'seed':0, 'colsample_bytree': 0.8, 
+ind_params = {'n_estimators': 1000, 'seed':0, 'colsample_bytree': 0.8, 
              'objective': 'binary:logistic','nthread':16, 'max_depth' :4,
-             'learning_rate':0.01, 'subsample':0.4, 'min_child_weight':4,
+             'learning_rate':0.1, 'subsample':0.4, 'min_child_weight':4,
              'gamma':0}
 
 def doGridCV(X,y):
@@ -116,11 +120,12 @@ def createCSV(pred, final):
 
 def LogisticCV(X, y):
 	lr = LogisticRegression()
-	grid_values = {'penalty': ['l1','l2'], 'C': [0.001,0.01,0.1,1,10,100,1000]}
+	grid_values = {'penalty': ['l2'], 'C': [0.001,0.01,0.1,1,10,100,1000]}
+	# l2 best is 18
 	model_lr = GridSearchCV(lr, param_grid=grid_values,
 								scoring = 'accuracy', cv = 5, n_jobs= -1)
 	model_lr.fit(X, y)
-	print(model_lr.grid_scores_)
+	print(model_lr.best_params_, model_lr.best_score_)
 
 #See the changes due to LDA
 def plotLDA(X, y):
@@ -141,51 +146,75 @@ def plotLDA(X, y):
 	ax.scatter(label2_sk, np.ones(len(label2_sk)), c='b', marker='x', label="label2")
 	ax.legend()
 	plt.show()
+def validate(X, y, model):
+	X_train, X_test, y_train, y_test = train_test_split(X,y,test_size=0.25,stratify=y,random_state=0)
+	model.fit(X_train, y_train)
+	pred = model.predict(X_test)
+	print(accuracy_score(y_test, pred))
+	print(confusion_matrix(y_test, pred))
 
 if __name__ == "__main__":
+'''
 	#import the training set
-	'''
-	X, y = preprocess_train()
-	X_pca, y_pca = preprocess_train(with_pca=True)
-	getBase(y)
-	X_test, final = preprocess_test()
-	X_test_pca, final_pca = preprocess_test(with_pca=True)
-	xgb_train = pd.read_csv("xgb.csv", index_col=0)
-	X = pd.concat([X, xgb_train], axis=1)
-	models = {}
-	#plotLDA(X,y)
-	#doGridCV(X, y)
-	#LogisticCV(X, y)
-	xgb_model = createXGB(X_pca, y_pca)
-	log_model = LogisticRegression(penalty='l1', C= 0.1)
-	#models['logm'] = log_model
-	models['xgbm'] = xgb_model
-	xgb_df = combineModels(X_pca, y_pca, X_test_pca, models, k=False)
-	#xgb_df.to_csv(path_or_buf='xgb.csv', index=True)
-	#LogisticCV(X,y)
-	#doKfold(X,y,log_model)
-	#print(model.feature_importances_)
-	X_test = pd.concat([X_test, xgb_df], axis=1)
-	log_model.fit(X,y)
-	pred = log_model.predict(X_test)
-	#model = LinearSVC(random_state=0)
-	#xgb_model = createXGB(X, y)
+	#X, y, lda = preprocess_train_lda(with_pca=False)
+	#X_test, final = preprocess_test_lda(with_pca=False, a_lda=lda)
+	XX, yy, llda = preprocess_train_lda(with_pca=True)
+	XX_test, final = preprocess_test_lda(with_pca=True, a_lda=llda)
+	#X, y = preprocess_train()
+	#X_test, final = preprocess_test()
+	X = XX
+	y = yy
+	X_test = XX_test
+	model = KNeighborsClassifier(n_neighbors=5)
+	#model = RandomForestClassifier(n_estimators=500, max_leaf_nodes=5, n_jobs=-1)
+	#model = DecisionTreeClassifier()
+	#model = createXGB(X, y)
+	#model = LogisticRegression(penalty='l2', C= 18)
+	validate(X, y, model)
+	model.fit(X, y)
+	pred = model.predict(X_test)
+	#print(model.coef_)
+	#for name, score in zip(X.columns, model.feature_importances_*10):
+	#	print(name, score)
+	#doKfold(X, y, model)
 	print(len(pred[pred == 1]))
 	createCSV(pred, final)
-	'''
-	X, y = preprocess_train(with_pca=True)
-	print(svc_param_selection(X, y, 3))
-	#X_test_pca, final = preprocess_test(with_pca=True)
-	#X_train, X_test, y_train, y_test = train_test_split(X,y,test_size=0.25,stratify=y,random_state=0)
-	#xgb_model = createXGB(X_train, y_train)
-	#pred = xgb_model.predict(X_test)
-	#rnd_clf = RandomForestClassifier(n_estimators=500, max_leaf_nodes=16, n_jobs=-1)
-	#rnd_clf.fit(X_train, y_train)
-	#pred = rnd_clf.predict(X_test)
-	#print(accuracy_score(y_test, pred))
-	#xgb_model.fit(X,y)
-	#pred = xgb_model.predict(X_test_pca)
-	#print(len(pred[pred == 1]))
-	#createCSV(pred, final)
 	#for name, score in zip(X.columns, (rnd_clf.feature_importances_*10)):
 	#	print(name,  str(round(score, 5)))
+'''
+	#import the training set
+	X, y = preprocess_train()
+	X_test, final = preprocess_test()
+	X_xgb, y_xgb = preprocess_train_lda(with_pca=True)
+	X_test_xgb, final = preprocess_test_lda(with_pca=True, a_lda=llda)
+
+	xgb_model = createXGB(X_xgb, y_xgb)
+	log_model = LogisticRegression(penalty='l2', C= 18)
+	nn_model = KNeighborsClassifier(n_neighbors=5)
+	for_model = RandomForestClassifier(n_estimators=500, max_leaf_nodes=16, n_jobs=-1)
+
+	xgb_model.fit(X_xgb,y_xgb)
+	nn_model.fit(X,y)
+	log_model.fit(X,y)
+	for_model.fit(X,y)
+
+	xgb_pred_init = pd.DataFrame(xgb_model.predict(X_xgb), columns = ['XGB'])
+	nn_pred_init = pd.DataFrame(nn_model.predict(X), columns = ['NN'])
+	log_pred_init = pd.DataFrame(log_model.predict(X), columns = ['log'])
+	for_pred_init = pd.DataFrame(for_model.predict(X), columns = ['for'])
+
+	train_this = pd.concat([nn_pred_init, log_pred_init, xgb_pred_init, for_pred_init],axis =1)
+
+	fin_mod = LogisticRegression()
+	fin_mod.fit(train_this,y)
+
+	xgb_pred_test = pd.DataFrame(xgb_model.predict(X_test_xgb), columns = ['XGB'])
+	nn_pred_test = pd.DataFrame(nn_model.predict(X_test), columns = ['NN'])
+	log_pred_test = pd.DataFrame(log_model.predict(X_test), columns = ['log'])
+	for_pred_test = pd.DataFrame(for_model.predict(X_test), columns = ['for'])
+
+	fin_pred = pd.concat([nn_pred_test, log_pred_test, xgb_pred_test, for_pred_test], axis=1)
+	pred = fin_mod.predict(fin_pred)
+
+	print(len(pred[pred == 1]))
+	createCSV(pred, final)
