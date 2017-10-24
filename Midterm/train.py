@@ -3,8 +3,8 @@ import numpy as np
 import xgboost as xgb
 import time
 from sklearn.metrics import accuracy_score
-from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import train_test_split, StratifiedKFold
+from sklearn.linear_model import LogisticRegression, Ridge, RidgeCV, Lasso, LassoCV
+from sklearn.model_selection import train_test_split, StratifiedKFold, cross_val_score
 from preprocess import preprocess_train, preprocess_test, featPCA, printSkew
 from sklearn.model_selection import GridSearchCV
 from sklearn.svm import LinearSVC
@@ -24,17 +24,30 @@ def getBase(y):
 
 cv_params = {'learning_rate': [0.1, 0.01], 'subsample': [0.7,0.8,0.9]}
 
-ind_params = {'n_estimators': 10000, 'seed':0, 'colsample_bytree': 0.8, 
-             'objective': 'binary:logistic','nthread':16, 'max_depth' : 5,
-             'learning_rate':0.1, 'subsample':0.4, 'min_child_weight':3}
+param_test1 = {
+ 'max_depth':range(3,10,1),
+ 'min_child_weight':range(1,6,1)
+}
+
+ind_params = {'n_estimators': 100, 'seed':0, 'colsample_bytree': 0.8, 
+             'objective': 'binary:logistic','nthread':32, 'max_depth' : 5,
+             'learning_rate':0.1, 'subsample':0.8, 'min_child_weight':1,
+             'gamma':0}
 
 def doGridCV(X,y):
 	opt_xgb = GridSearchCV(xgb.XGBClassifier(**ind_params), 
-	                            cv_params, 
-	                             scoring = 'accuracy', cv = 5, n_jobs= -1)
+	                            param_test1, 
+	                            scoring = 'accuracy', cv = 5, n_jobs= -1)
 	opt_xgb.fit(X, y)
-	print(opt_xgb.grid_scores_)
+	print(gsearch1.best_params_, gsearch1.best_score_)
 
+def modelfit(X, y, cv_folds=5, early_stopping_rounds=50):
+	alg = xgb.XGBClassifier(**ind_params)
+	xgtrain = xgb.DMatrix(X.values, label=y.values)
+	cvresult = xgb.cv(ind_params, xgtrain, num_boost_round=alg.get_params()['n_estimators'], nfold=cv_folds,
+            metrics='error', early_stopping_rounds=early_stopping_rounds, stratified=True)
+	print(cvresult.shape[0])
+	print(cvresult)
 def doKfold(X,y, model):
 	kf = StratifiedKFold(n_splits=5, random_state=1)
 	start = time.time()
@@ -90,7 +103,13 @@ def createCSV(pred, final):
 	final.to_csv(path_or_buf='final.csv', index=False)
 	return
 
-
+def LogisticCV(X, y):
+	lr = LogisticRegression()
+	grid_values = {'penalty': ['l1','l2'], 'C': [0.001,0.01,0.1,1,10,100,1000]}
+	model_lr = GridSearchCV(lr, param_grid=grid_values,
+								scoring = 'accuracy', cv = 5, n_jobs= -1)
+	model_lr.fit(X, y)
+	print(model_lr.grid_scores_)
 
 if __name__ == "__main__":
 	#import the training set
@@ -98,16 +117,15 @@ if __name__ == "__main__":
 	getBase(y)
 	X_test, final = preprocess_test()
 	printSkew(X)
-	print(X.describe())
-	#X = featPCA(X)
-	#X_test = featPCA(X_test)
-	model = createXGB(X, y)
-	print(model.feature_importances_)
-	#model = LogisticRegression()
+	doGridCV(X, y)
+	#LogisticCV(X, y)
+	#model = createXGB(X, y)
+	#print(model.feature_importances_)
+	#model = LogisticRegression(penalty='l2', C= 0.1)
 	#model = LinearSVC(random_state=0)
 	#model.fit(X, y)
-	pred = model.predict(X_test)
-	print(len(pred[pred == 1]))
-	createCSV(pred, final)
+	#pred = model.predict(X_test)
+	#print(len(pred[pred == 1]))
+	#createCSV(pred, final)
 
 

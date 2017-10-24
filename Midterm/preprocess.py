@@ -15,9 +15,10 @@ def fixNaN(df, cols, replace):
 
 # Remove columns in df based on the labels in to_remove
 def removeCols(df):
-	#to_remove = ['F19', 'F8', 'F17', 'F24', 'F1', 'F4', 'F15', 'F7', 'F20', 'F12', 'F13']
+	to_remove = ['F19', 'F8', 'F17', 'F24', 'F1', 'F4', 'F15', 'F7', 'F20', 'F12', 'F13']
 	#to_remove = ['F25', 'F4', 'F17', 'F20']
-	to_remove =  ['F1', 'F4', 'F7', 'F8','F12','F13','F15', 'F17', 'F20', 'F24', 'F26', 'F23']
+	#to_remove =  ['F1', 'F4', 'F7', 'F8','F12','F13','F15', 'F17', 'F20', 'F24', 'F26', 'F23']
+	#to_remove = ['F1', 'F2', 'F4', 'F5', 'F7', 'F8', 'F9', 'F10']
 	df = df.drop(to_remove, 1)
 	return df
 
@@ -64,24 +65,36 @@ def printSkew(X):
  		skewness[col] = skew(X[col])
  	print(str(skewness) + '\n')
 
-def featPCA(X):
+def featPCA(X, keep, unique):
 	pca = PCA()
 	X_reduced = pca.fit_transform(X)
 	print(X_reduced.shape)
 	print(np.cumsum(np.round(pca.explained_variance_ratio_, decimals=4)*100))
-	return X_reduced[:,:8]
+	col_names = []
+	for i in range(keep):
+		col_names.append('pca_'+str(i)+unique)
+	return pd.DataFrame(X_reduced[:,:keep],columns=col_names)
+
+def getColumns(X):
+	X_other = X.loc[:, ('F1', 'F2', 'F4', 'F5', 'F7', 'F8', 'F9', 'F10', 'F12', 'F13', 'F14', 'F15', 'F17', 'F20', 'F24')]
+	return X_other
 
 # Do preprocessing for the training set
 def preprocess_train():
 	train = pd.read_csv("train_final.csv")
 	X, y = getXy(train)
-
-	#X = removeCols(X)
-	# cols and replace have to be same length
 	cols = ['F5', 'F19']
 	replace = [0.0, 0]
 	X = fixNaN(X, cols, replace)
 	X = toscale(X)
+	#X = removeCols(X)
+	X = featPCA(X, 8, 'better')
+	#X_rem = getColumns(X)
+	#X = removeCols(X)
+	#X_rem = featPCA(X_rem, 7,'worse')
+	#X = featPCA(X, 7, 'better')
+	#X = pd.concat([X, X_rem], axis=1)
+	# cols and replace have to be same length
 	#X, y = removeOutliers(X,y)
 	return X, y
 
@@ -96,6 +109,13 @@ def preprocess_test():
 	replace = [0.0,0]
 	X = fixNaN(X, cols, replace)
 	X = toscale(X)
+	#X = removeCols(X)
+	X = featPCA(X, 8, 'better')
+	#X_rem = getColumns(X)
+	#X = removeCols(X)
+	#X_rem = featPCA(X_rem, 7, 'worse')
+	#X = featPCA(X, 7, 'better')
+	#X = pd.concat([X, X_rem], axis=1)
 	return X, final
 
 #if __name__ == "__main__":
