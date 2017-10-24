@@ -12,6 +12,7 @@ from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.svm import LinearSVC
 import time
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.svm import SVC
 
 #Get base accuracy
 #all_zero = np.zeros(train['id'].count())
@@ -21,6 +22,15 @@ from sklearn.ensemble import RandomForestClassifier
 
 # splits for validation
 #X_train, X_test, y_train, y_test = train_test_split(X,y,test_size=0.3,stratify=y)
+def svc_param_selection(X, y, nfolds):
+    Cs = [0.001, 0.01, 0.1, 1, 10]
+    gammas = [0.001, 0.01, 0.1, 1]
+    param_grid = {'C': Cs, 'gamma' : gammas}
+    grid_search = GridSearchCV(SVC(kernel='rbf'), param_grid, cv=nfolds, n_jobs= -1)
+    grid_search.fit(X, y)
+    grid_search.best_params_
+    print(grid_search.best_params_, grid_search.best_score_)
+
 def getBase(y):
 	all_zero = np.zeros(len(y))
 	print("If all 0 predicted accuracy = " + str(accuracy_score(y, all_zero)) + "\n")
@@ -164,17 +174,18 @@ if __name__ == "__main__":
 	createCSV(pred, final)
 	'''
 	X, y = preprocess_train(with_pca=True)
-	X_test_pca, final = preprocess_test(with_pca=True)
-	X_train, X_test, y_train, y_test = train_test_split(X,y,test_size=0.25,stratify=y,random_state=0)
-	xgb_model = createXGB(X_train, y_train)
-	pred = xgb_model.predict(X_test)
+	print(svc_param_selection(X, y, 3))
+	#X_test_pca, final = preprocess_test(with_pca=True)
+	#X_train, X_test, y_train, y_test = train_test_split(X,y,test_size=0.25,stratify=y,random_state=0)
+	#xgb_model = createXGB(X_train, y_train)
+	#pred = xgb_model.predict(X_test)
 	#rnd_clf = RandomForestClassifier(n_estimators=500, max_leaf_nodes=16, n_jobs=-1)
 	#rnd_clf.fit(X_train, y_train)
 	#pred = rnd_clf.predict(X_test)
-	print(accuracy_score(y_test, pred))
-	xgb_model.fit(X,y)
-	pred = xgb_model.predict(X_test_pca)
-	print(len(pred[pred == 1]))
-	createCSV(pred, final)
+	#print(accuracy_score(y_test, pred))
+	#xgb_model.fit(X,y)
+	#pred = xgb_model.predict(X_test_pca)
+	#print(len(pred[pred == 1]))
+	#createCSV(pred, final)
 	#for name, score in zip(X.columns, (rnd_clf.feature_importances_*10)):
 	#	print(name,  str(round(score, 5)))
