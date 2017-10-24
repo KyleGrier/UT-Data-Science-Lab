@@ -25,19 +25,19 @@ def getBase(y):
 cv_params = {'learning_rate': [0.1, 0.01], 'subsample': [0.7,0.8,0.9]}
 
 param_test1 = {
- 'max_depth':range(3,10,2),
- 'min_child_weight':range(1,6,2)
+ 'max_depth':[3,4,5],
+ 'min_child_weight':range(1,6,2
 }
 
 ind_params = {'n_estimators': 100, 'seed':0, 'colsample_bytree': 0.8, 
-             'objective': 'binary:logistic','nthread':32, 'max_depth' : 5,
+             'objective': 'binary:logistic','nthread':16, 'max_depth' : 5,
              'learning_rate':0.1, 'subsample':0.8, 'min_child_weight':1,
              'gamma':0}
 
 def doGridCV(X,y):
 	opt_xgb = GridSearchCV(xgb.XGBClassifier(**ind_params), 
 	                            param_test1, 
-	                            scoring = 'accuracy', cv = 5, n_jobs= 4)
+	                            scoring = 'accuracy', cv = 5, n_jobs= -1)
 	opt_xgb.fit(X, y)
 	print(opt_xgb.best_params_, opt_xgb.best_score_)
 
