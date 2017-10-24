@@ -26,8 +26,7 @@ cv_params = {'learning_rate': [0.1, 0.01], 'subsample': [0.7,0.8,0.9]}
 
 param_test1 = {
  'max_depth':[3,4,5],
- 'min_child_weight':range(1,6,2
-}
+ 'min_child_weight':range(1,6,2)}
 
 ind_params = {'n_estimators': 100, 'seed':0, 'colsample_bytree': 0.8, 
              'objective': 'binary:logistic','nthread':16, 'max_depth' : 5,
