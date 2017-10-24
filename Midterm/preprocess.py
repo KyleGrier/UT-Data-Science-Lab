@@ -85,11 +85,11 @@ def preprocess_train():
 	train = pd.read_csv("train_final.csv")
 	X, y = getXy(train)
 	cols = ['F5', 'F19']
-	replace = [0.0, 0]
+	replace = [0.0, 6665.12]
 	X = fixNaN(X, cols, replace)
 	X = toscale(X)
-	X = removeCols(X)
-	X = featPCA(X, 7, 'better')
+	#X = removeCols(X)
+	X = featPCA(X, 10, 'better')
 	#X_rem = getColumns(X)
 	#X = removeCols(X)
 	#X_rem = featPCA(X_rem, 7,'worse')
@@ -107,11 +107,11 @@ def preprocess_test():
 	#X = removeCols(X)
 	# cols and replace have to be same length
 	cols = ['F5','F19']
-	replace = [0.0,0]
+	replace = [0.0, 6665.12]
 	X = fixNaN(X, cols, replace)
 	X = toscale(X)
 	#X = removeCols(X)
-	X = featPCA(X, 7, 'better')
+	X = featPCA(X, 10, 'better')
 	#X_rem = getColumns(X)
 	#X = removeCols(X)
 	#X_rem = featPCA(X_rem, 7, 'worse')

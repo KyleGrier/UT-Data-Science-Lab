@@ -27,11 +27,11 @@ def getBase(y):
 cv_params = {'learning_rate': [0.1, 0.01], 'subsample': [0.7,0.8,0.9]}
 
 param_test1 = {
- 'max_depth':[3,4,5,6,7]}
+ 'min_child_weight':[3,4,5,6,7]}
 
-ind_params = {'n_estimators': 100, 'seed':0, 'colsample_bytree': 0.8, 
-             'objective': 'binary:logistic','nthread':16, 'max_depth' :5,
-             'learning_rate':0.1, 'subsample':0.4	, 'min_child_weight':3,
+ind_params = {'n_estimators': 1000, 'seed':0, 'colsample_bytree': 0.8, 
+             'objective': 'binary:logistic','nthread':16, 'max_depth' :4,
+             'learning_rate':0.1, 'subsample':0.4, 'min_child_weight':4,
              'gamma':0}
 
 def doGridCV(X,y):
@@ -82,7 +82,7 @@ def createSVM(X,y):
 	return
 
 # If k = true do kfold to combine model
-def combineModels(X, y, X_test, k=False):
+def combineModels(X, y, X_test, models, k=False):
 	models = {}
 	model_df = pd.DataFrame(0, index=X_test.index, columns=['xgb'])
 	xgb_model = createXGB(X,y)
@@ -91,12 +91,13 @@ def combineModels(X, y, X_test, k=False):
 		kf = StratifiedKFold(n_splits=5, random_state=1)
 		for train_idx, test_idx in kf.split(X,y): 
 			for key, model in models.iteritems():
-				model_df[key] = model.predict(X.iloc[test_idx])
+				model.fit(X.iloc[train_idx], y.iloc[train_idx])
+				model_df[key].iloc[test_idx] = model.predict(X.iloc[test_idx])
 	else:
 		for key, model in models.iteritems():
 			model_df[key] = model.predict(X_test)
-	combined = pd.concat([X_test, model_df])
-	return combined
+	#combined = pd.concat([X_test, model_df])
+	return model_df
 
 def createCSV(pred, final):
 	final['Y'] = pred
@@ -110,6 +111,7 @@ def LogisticCV(X, y):
 								scoring = 'accuracy', cv = 5, n_jobs= -1)
 	model_lr.fit(X, y)
 	print(model_lr.grid_scores_)
+
 #See the changes due to LDA
 def plotLDA(X, y):
 	clf = LinearDiscriminantAnalysis()
@@ -136,17 +138,24 @@ if __name__ == "__main__":
 	getBase(y)
 	X_test, final = preprocess_test()
 	printSkew(X)
+	models = {}
 	#plotLDA(X,y)
-	doGridCV(X, y)
+	#doGridCV(X, y)
 	#LogisticCV(X, y)
-	#model = createXGB(X, y)
-	#doKfold(X,y,model)
+	xgb_model = createXGB(X, y)
+	models['xgbm'] = xgb_model
+	#log_model = LogisticRegression(penalty='l2', C= 0.1)
+	#log_model.fit(X,y)
+	#models['logm'] = log_model
+	xgb_df = combineModels(X, y, X, models, k=True)
+	xgb_df.to_csv(path_or_buf='xgb.csv', index=True)
+	doKfold(X,y,xgb_model)
 	#print(model.feature_importances_)
-	#model = LogisticRegression(penalty='l2', C= 0.1)
+
 	#model = LinearSVC(random_state=0)
-	#model.fit(X, y)
-	#pred = model.predict(X_test)
-	#print(len(pred[pred == 1]))
-	#createCSV(pred, final)
+	xgb_model = createXGB(X, y)
+	pred = xgb_model.predict(X_test)
+	print(len(pred[pred == 1]))
+	createCSV(pred, final)
 
 
