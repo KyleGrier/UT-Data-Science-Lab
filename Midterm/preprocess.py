@@ -16,10 +16,11 @@ def fixNaN(df, cols, replace):
 
 # Remove columns in df based on the labels in to_remove
 def removeCols(df):
-	to_remove = ['F19', 'F8', 'F17', 'F24', 'F1', 'F4', 'F15', 'F7', 'F20', 'F12', 'F13']
+	#to_remove = ['F19', 'F8', 'F17', 'F24', 'F1', 'F4', 'F15', 'F7', 'F20', 'F12', 'F13']
 	#to_remove = ['F25', 'F4', 'F17', 'F20']
 	#to_remove =  ['F1', 'F4', 'F7', 'F8','F12','F13','F15', 'F17', 'F20', 'F24', 'F26', 'F23']
 	#to_remove = ['F1', 'F2', 'F4', 'F5', 'F7', 'F8', 'F9', 'F10']
+	to_remove = ['F1','F4','F7','F8','F12','F13', 'F15', 'F17', 'F20', 'F21', 'F24']
 	df = df.drop(to_remove, 1)
 	return df
 
@@ -81,15 +82,16 @@ def getColumns(X):
 	return X_other
 
 # Do preprocessing for the training set
-def preprocess_train():
+def preprocess_train(with_pca=False):
 	train = pd.read_csv("train_final.csv")
 	X, y = getXy(train)
 	cols = ['F5', 'F19']
 	replace = [0.0, 0]
 	X = fixNaN(X, cols, replace)
 	X = toscale(X)
-	#X = removeCols(X)
-	#X = featPCA(X, 7, 'better')
+	X = removeCols(X)
+	if with_pca:
+		X = featPCA(X, 6, 'better')
 	#X_rem = getColumns(X)
 	#X = removeCols(X)
 	#X_rem = featPCA(X_rem, 7,'worse')
@@ -101,7 +103,7 @@ def preprocess_train():
 
 
 # Do preprocessing for the test set
-def preprocess_test():
+def preprocess_test(with_pca=False):
 	test = pd.read_csv("test_final.csv")
 	X, final = getXid(test)
 	#X = removeCols(X)
@@ -110,8 +112,9 @@ def preprocess_test():
 	replace = [0.0, 0]
 	X = fixNaN(X, cols, replace)
 	X = toscale(X)
-	#X = removeCols(X)
-	#X = featPCA(X, 7, 'better')
+	X = removeCols(X)
+	if with_pca:
+		X = featPCA(X, 6, 'better')
 	#X_rem = getColumns(X)
 	#X = removeCols(X)
 	#X_rem = featPCA(X_rem, 7, 'worse')

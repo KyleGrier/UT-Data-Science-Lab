@@ -11,6 +11,7 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.svm import LinearSVC
 import time
+from sklearn.ensemble import RandomForestClassifier
 
 #Get base accuracy
 #all_zero = np.zeros(train['id'].count())
@@ -29,9 +30,9 @@ cv_params = {'learning_rate': [0.1, 0.01], 'subsample': [0.7,0.8,0.9]}
 param_test1 = {
  'min_child_weight':[3,4,5,6,7]}
 
-ind_params = {'n_estimators': 1000, 'seed':0, 'colsample_bytree': 0.8, 
+ind_params = {'n_estimators': 20000, 'seed':0, 'colsample_bytree': 0.8, 
              'objective': 'binary:logistic','nthread':16, 'max_depth' :4,
-             'learning_rate':0.1, 'subsample':0.4, 'min_child_weight':4,
+             'learning_rate':0.01, 'subsample':0.4, 'min_child_weight':4,
              'gamma':0}
 
 def doGridCV(X,y):
@@ -85,8 +86,6 @@ def createSVM(X,y):
 def combineModels(X, y, X_test, models, k=False):
 	models = {}
 	model_df = pd.DataFrame(0, index=X_test.index, columns=['xgb'])
-	xgb_model = createXGB(X,y)
-	models['xgb'] = xgb_model
 	if k == True:
 		kf = StratifiedKFold(n_splits=5, random_state=1)
 		for train_idx, test_idx in kf.split(X,y): 
@@ -95,6 +94,7 @@ def combineModels(X, y, X_test, models, k=False):
 				model_df[key].iloc[test_idx] = model.predict(X.iloc[test_idx])
 	else:
 		for key, model in models.iteritems():
+			model.fit(X, y)
 			model_df[key] = model.predict(X_test)
 	#combined = pd.concat([X_test, model_df])
 	return model_df
@@ -134,30 +134,47 @@ def plotLDA(X, y):
 
 if __name__ == "__main__":
 	#import the training set
+	'''
 	X, y = preprocess_train()
+	X_pca, y_pca = preprocess_train(with_pca=True)
 	getBase(y)
 	X_test, final = preprocess_test()
+	X_test_pca, final_pca = preprocess_test(with_pca=True)
 	xgb_train = pd.read_csv("xgb.csv", index_col=0)
 	X = pd.concat([X, xgb_train], axis=1)
-	#models = {}
+	models = {}
 	#plotLDA(X,y)
 	#doGridCV(X, y)
 	#LogisticCV(X, y)
-	#xgb_model = createXGB(X, y)
-	#models['xgbm'] = xgb_model
-	log_model = LogisticRegression(penalty='l2', C= 0.1)
-	log_model.fit(X,y)
+	xgb_model = createXGB(X_pca, y_pca)
+	log_model = LogisticRegression(penalty='l1', C= 0.1)
 	#models['logm'] = log_model
-	#xgb_df = combineModels(X, y, X, models, k=True)
+	models['xgbm'] = xgb_model
+	xgb_df = combineModels(X_pca, y_pca, X_test_pca, models, k=False)
 	#xgb_df.to_csv(path_or_buf='xgb.csv', index=True)
-	LogisticCV(X,y)
+	#LogisticCV(X,y)
 	#doKfold(X,y,log_model)
 	#print(model.feature_importances_)
-
+	X_test = pd.concat([X_test, xgb_df], axis=1)
+	log_model.fit(X,y)
+	pred = log_model.predict(X_test)
 	#model = LinearSVC(random_state=0)
 	#xgb_model = createXGB(X, y)
-	#pred = xgb_model.predict(X_test)
-	#print(len(pred[pred == 1]))
-	#createCSV(pred, final)
-
-
+	print(len(pred[pred == 1]))
+	createCSV(pred, final)
+	'''
+	X, y = preprocess_train(with_pca=True)
+	X_test_pca, final = preprocess_test(with_pca=True)
+	X_train, X_test, y_train, y_test = train_test_split(X,y,test_size=0.25,stratify=y,random_state=0)
+	xgb_model = createXGB(X_train, y_train)
+	pred = xgb_model.predict(X_test)
+	#rnd_clf = RandomForestClassifier(n_estimators=500, max_leaf_nodes=16, n_jobs=-1)
+	#rnd_clf.fit(X_train, y_train)
+	#pred = rnd_clf.predict(X_test)
+	print(accuracy_score(y_test, pred))
+	xgb_model.fit(X,y)
+	pred = xgb_model.predict(X_test_pca)
+	print(len(pred[pred == 1]))
+	createCSV(pred, final)
+	#for name, score in zip(X.columns, (rnd_clf.feature_importances_*10)):
+	#	print(name,  str(round(score, 5)))
