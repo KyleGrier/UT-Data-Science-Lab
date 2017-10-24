@@ -7,6 +7,7 @@ from sklearn.linear_model import LogisticRegression, Ridge, RidgeCV, Lasso, Lass
 from sklearn.model_selection import train_test_split, StratifiedKFold, cross_val_score
 from preprocess import preprocess_train, preprocess_test, featPCA, printSkew
 from sklearn.model_selection import GridSearchCV
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.svm import LinearSVC
 import time
 
@@ -25,12 +26,11 @@ def getBase(y):
 cv_params = {'learning_rate': [0.1, 0.01], 'subsample': [0.7,0.8,0.9]}
 
 param_test1 = {
- 'max_depth':[3,4,5],
- 'min_child_weight':range(1,6,2)}
+ 'max_depth':[5,6,7,8]}
 
 ind_params = {'n_estimators': 100, 'seed':0, 'colsample_bytree': 0.8, 
              'objective': 'binary:logistic','nthread':16, 'max_depth' : 5,
-             'learning_rate':0.1, 'subsample':0.8, 'min_child_weight':1,
+             'learning_rate':0.1, 'subsample':0.8, 'min_child_weight':3,
              'gamma':0}
 
 def doGridCV(X,y):
@@ -109,6 +109,25 @@ def LogisticCV(X, y):
 								scoring = 'accuracy', cv = 5, n_jobs= -1)
 	model_lr.fit(X, y)
 	print(model_lr.grid_scores_)
+#See the changes due to LDA
+def plotLDA(X, y):
+	clf = LinearDiscriminantAnalysis()
+
+	label1 = X[y==0]
+	label2 = X[y==1]
+
+	clf.fit(X, y)
+
+	label1_sk = clf.transform(label1)
+	label2_sk = clf.transform(label2)
+
+	fig = plt.figure()
+	ax = fig.add_subplot(111)
+
+	ax.scatter(label1_sk, np.ones(len(label1_sk)), c='r', marker='o', label="label1")
+	ax.scatter(label2_sk, np.ones(len(label2_sk)), c='b', marker='x', label="label2")
+	ax.legend()
+	plt.show()
 
 if __name__ == "__main__":
 	#import the training set
