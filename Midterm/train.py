@@ -137,25 +137,27 @@ if __name__ == "__main__":
 	X, y = preprocess_train()
 	getBase(y)
 	X_test, final = preprocess_test()
-	printSkew(X)
-	models = {}
+	xgb_train = pd.read_csv("xgb.csv", index_col=0)
+	X = pd.concat([X, xgb_train], axis=1)
+	#models = {}
 	#plotLDA(X,y)
 	#doGridCV(X, y)
 	#LogisticCV(X, y)
-	xgb_model = createXGB(X, y)
-	models['xgbm'] = xgb_model
-	#log_model = LogisticRegression(penalty='l2', C= 0.1)
-	#log_model.fit(X,y)
+	#xgb_model = createXGB(X, y)
+	#models['xgbm'] = xgb_model
+	log_model = LogisticRegression(penalty='l2', C= 0.1)
+	log_model.fit(X,y)
 	#models['logm'] = log_model
-	xgb_df = combineModels(X, y, X, models, k=True)
-	xgb_df.to_csv(path_or_buf='xgb.csv', index=True)
-	doKfold(X,y,xgb_model)
+	#xgb_df = combineModels(X, y, X, models, k=True)
+	#xgb_df.to_csv(path_or_buf='xgb.csv', index=True)
+	LogisticCV(X,y)
+	#doKfold(X,y,log_model)
 	#print(model.feature_importances_)
 
 	#model = LinearSVC(random_state=0)
-	xgb_model = createXGB(X, y)
-	pred = xgb_model.predict(X_test)
-	print(len(pred[pred == 1]))
-	createCSV(pred, final)
+	#xgb_model = createXGB(X, y)
+	#pred = xgb_model.predict(X_test)
+	#print(len(pred[pred == 1]))
+	#createCSV(pred, final)
 
 
