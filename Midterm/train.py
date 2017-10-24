@@ -45,8 +45,8 @@ param_test1 = {
  'min_child_weight':[3,4,5,6,7]}
 
 ind_params = {'n_estimators': 1000, 'seed':0, 'colsample_bytree': 0.8, 
-             'objective': 'binary:logistic','nthread':16, 'max_depth' :5,
-             'learning_rate':0.1, 'subsample':0.4, 'min_child_weight':3,
+             'objective': 'binary:logistic','nthread':16, 'max_depth' :4,
+             'learning_rate':0.1, 'subsample':0.4, 'min_child_weight':4,
              'gamma':0}
 
 def doGridCV(X,y):
