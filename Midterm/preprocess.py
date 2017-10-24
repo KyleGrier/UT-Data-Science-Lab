@@ -129,9 +129,9 @@ def preprocess_train_lda(with_pca=False):
 	X_best, lda = dolda(X_best, y)
 	X_best = getPoly(X_best, 2, 'best')
 	X = removeCols(X, list(worst_cols))
-	X = removeCols(X, list(best_cols))
+	#X = removeCols(X, list(best_cols))
 	if with_pca:
-		X = featPCA(X, 5, 'better', verbose=True)
+		X = featPCA(X, 6, 'better', verbose=True)
 	X = pd.concat([X, X_worst, X_best], axis=1)
 	return X, y, lda
 
@@ -158,9 +158,9 @@ def preprocess_test_lda(with_pca=False, a_lda = None):
 		X_best = featPCA(X_best, 1, 'best')
 	X_best = getPoly(X_best, 2, 'best')
 	X = removeCols(X, list(worst_cols))
-	X = removeCols(X, list(best_cols))
+	#X = removeCols(X, list(best_cols))
 	if with_pca:
-		X = featPCA(X, 5, 'better')
+		X = featPCA(X, 6, 'better')
 	X = pd.concat([X, X_worst, X_best], axis=1)
 	return X, final
 
