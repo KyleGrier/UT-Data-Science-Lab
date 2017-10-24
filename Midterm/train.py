@@ -25,8 +25,8 @@ def getBase(y):
 cv_params = {'learning_rate': [0.1, 0.01], 'subsample': [0.7,0.8,0.9]}
 
 param_test1 = {
- 'max_depth':range(3,10,1),
- 'min_child_weight':range(1,6,1)
+ 'max_depth':range(3,10,2),
+ 'min_child_weight':range(1,6,2)
 }
 
 ind_params = {'n_estimators': 100, 'seed':0, 'colsample_bytree': 0.8, 
@@ -37,9 +37,9 @@ ind_params = {'n_estimators': 100, 'seed':0, 'colsample_bytree': 0.8,
 def doGridCV(X,y):
 	opt_xgb = GridSearchCV(xgb.XGBClassifier(**ind_params), 
 	                            param_test1, 
-	                            scoring = 'accuracy', cv = 5, n_jobs= -1)
+	                            scoring = 'accuracy', cv = 5, n_jobs= 4)
 	opt_xgb.fit(X, y)
-	print(gsearch1.best_params_, gsearch1.best_score_)
+	print(opt_xgb.best_params_, opt_xgb.best_score_)
 
 def modelfit(X, y, cv_folds=5, early_stopping_rounds=50):
 	alg = xgb.XGBClassifier(**ind_params)
