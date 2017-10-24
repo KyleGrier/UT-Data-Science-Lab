@@ -45,8 +45,8 @@ param_test1 = {
  'min_child_weight':[3,4,5,6,7]}
 
 ind_params = {'n_estimators': 1000, 'seed':0, 'colsample_bytree': 0.8, 
-             'objective': 'binary:logistic','nthread':16, 'max_depth' :4,
-             'learning_rate':0.1, 'subsample':0.4, 'min_child_weight':4,
+             'objective': 'binary:logistic','nthread':16, 'max_depth' :5,
+             'learning_rate':0.1, 'subsample':0.4, 'min_child_weight':3,
              'gamma':0}
 
 def doGridCV(X,y):
@@ -154,7 +154,7 @@ def validate(X, y, model):
 	print(confusion_matrix(y_test, pred))
 
 if __name__ == "__main__":
-'''
+	'''
 	#import the training set
 	#X, y, lda = preprocess_train_lda(with_pca=False)
 	#X_test, final = preprocess_test_lda(with_pca=False, a_lda=lda)
@@ -181,12 +181,12 @@ if __name__ == "__main__":
 	createCSV(pred, final)
 	#for name, score in zip(X.columns, (rnd_clf.feature_importances_*10)):
 	#	print(name,  str(round(score, 5)))
-'''
+	'''
 	#import the training set
 	X, y = preprocess_train()
 	X_test, final = preprocess_test()
-	X_xgb, y_xgb = preprocess_train_lda(with_pca=True)
-	X_test_xgb, final = preprocess_test_lda(with_pca=True, a_lda=llda)
+	X_xgb, y_xgb, lda = preprocess_train_lda(with_pca=True)
+	X_test_xgb, final = preprocess_test_lda(with_pca=True, a_lda=lda)
 
 	xgb_model = createXGB(X_xgb, y_xgb)
 	log_model = LogisticRegression(penalty='l2', C= 18)
