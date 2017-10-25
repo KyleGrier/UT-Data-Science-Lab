@@ -265,9 +265,9 @@ if __name__ == "__main__":
 	xgb_model2.fit(X2s,y2s)
 	log_model.fit(Xs,ys)
 	print('Start first predict')
-	xgb_pred_init1 = pd.DataFrame(xgb_model1.predict(X_xgb), columns = ['XGB'])
-	xgb_pred_init2 = pd.DataFrame(xgb_model2.predict(X2), columns = ['XGB2'])
-	log_pred_init = pd.DataFrame(log_model.predict(X), columns = ['log'])
+	xgb_pred_init1 = pd.DataFrame(xgb_model1.predict(X_xgbs), columns = ['XGB'])
+	xgb_pred_init2 = pd.DataFrame(xgb_model2.predict(X2s), columns = ['XGB2'])
+	log_pred_init = pd.DataFrame(log_model.predict(Xs), columns = ['log'])
 
 	train_this = pd.concat([log_pred_init, xgb_pred_init1, xgb_pred_init2], axis =1)
 	print('Start train')
