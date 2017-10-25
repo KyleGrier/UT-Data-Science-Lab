@@ -47,14 +47,14 @@ cv_params = {'learning_rate': [0.1, 0.01], 'subsample': [0.7,0.8,0.9]}
 param_test1 = {
  'min_child_weight':[3,4,5,6,7]}
 
-ind_params1 = {'n_estimators': 3000, 'seed':0, 'colsample_bytree': 0.8, 
+ind_params1 = {'n_estimators': 10000, 'seed':0, 'colsample_bytree': 0.8, 
              'objective': 'binary:logistic','nthread':16, 'max_depth' :5,
-             'learning_rate':0.01, 'subsample':0.5, 'min_child_weight':3,
+             'learning_rate':0.005, 'subsample':0.5, 'min_child_weight':3,
              'gamma':0}
 
-ind_params2 = {'n_estimators': 10000, 'seed':0, 'colsample_bytree': 0.8, 
+ind_params2 = {'n_estimators': 100, 'seed':0, 'colsample_bytree': 0.8, 
              'objective': 'binary:logistic','nthread':16, 'max_depth' :5,
-             'learning_rate':0.01, 'subsample':0.5, 'min_child_weight':3,
+             'learning_rate':0.1, 'subsample':0.5, 'min_child_weight':3,
              'gamma':0}
 def doGridCV(X,y):
 	opt_xgb = GridSearchCV(xgb.XGBClassifier(**ind_params), 
@@ -252,26 +252,32 @@ if __name__ == "__main__":
 	X_test, final = preprocess_test_svc(a_lda)
 	X_xgb, y_xgb, lda = preprocess_train_lda(with_pca=True)
 	X_test_xgb, final = preprocess_test_lda(with_pca=True, a_lda=lda)
+	
+	X_xgb, y_xgb = getSmote(X_xgb, y_xgb)
+	X_xgb, y_xgb = getSmote(X, y)
 
 	xgb_model1 = xgb.XGBClassifier(**ind_params1)
 	xgb_model2 = xgb.XGBClassifier(**ind_params2)
 	log_model = LogisticRegression()
 
 	xgb_model1.fit(X_xgb,y_xgb)
+	xgb_model2.fit(X_xgb,y_xgb)
 	log_model.fit(X,y)
 
 	xgb_pred_init1 = pd.DataFrame(xgb_model1.predict(X_xgb), columns = ['XGB'])
+	xgb_pred_init2 = pd.DataFrame(xgb_model1.predict(X_xgb), columns = ['XGB2'])
 	log_pred_init = pd.DataFrame(log_model.predict(X), columns = ['log'])
 
-	train_this = pd.concat([log_pred_init, xgb_pred_init],axis =1)
+	train_this = pd.concat([log_pred_init, xgb_pred_init1, xgb_pred_init2],axis =1)
 
 	fin_mod = LogisticRegression()
 	fin_mod.fit(train_this,y)
 
 	xgb_pred_test1 = pd.DataFrame(xgb_model1.predict(X_test_xgb), columns = ['XGB'])
+	xgb_pred_test2 = pd.DataFrame(xgb_model2.predict(X_test_xgb), columns = ['XGB2'])
 	log_pred_test = pd.DataFrame(log_model.predict(X_test), columns = ['log'])
 
-	fin_pred = pd.concat([log_pred_test, xgb_pred_test1], axis=1)
+	fin_pred = pd.concat([log_pred_test, xgb_pred_test1, xgb_pred_test2], axis=1)
 	pred = fin_mod.predict(fin_pred)
 
 	print(len(pred[pred == 1]))
