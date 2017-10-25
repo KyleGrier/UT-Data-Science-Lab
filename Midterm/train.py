@@ -47,9 +47,9 @@ cv_params = {'learning_rate': [0.1, 0.01], 'subsample': [0.7,0.8,0.9]}
 param_test1 = {
  'min_child_weight':[3,4,5,6,7]}
 
-ind_params1 = {'n_estimators': 10000, 'seed':0, 'colsample_bytree': 0.8, 
+ind_params1 = {'n_estimators': 180, 'seed':0, 'colsample_bytree': 0.8, 
              'objective': 'binary:logistic','nthread':16, 'max_depth' :5,
-             'learning_rate':0.005, 'subsample':0.5, 'min_child_weight':3,
+             'learning_rate':0.1, 'subsample':0.5, 'min_child_weight':3,
              'gamma':0}
 
 ind_params2 = {'n_estimators': 100, 'seed':0, 'colsample_bytree': 0.8, 
