@@ -47,9 +47,9 @@ cv_params = {'learning_rate': [0.1, 0.01], 'subsample': [0.7,0.8,0.9]}
 param_test1 = {
  'min_child_weight':[3,4,5,6,7]}
 
-ind_params1 = {'n_estimators': 180, 'seed':0, 'colsample_bytree': 0.8, 
-             'objective': 'binary:logistic','nthread':16, 'max_depth' :5,
-             'learning_rate':0.1, 'subsample':0.5, 'min_child_weight':3,
+ind_params1 = {'n_estimators': 100000, 'seed':0, 'colsample_bytree': 0.8, 
+             'objective': 'binary:logistic','nthread':16, 'max_depth' :7,
+             'learning_rate':0.001, 'subsample':0.5, 'min_child_weight':4,
              'gamma':0}
 
 ind_params2 = {'n_estimators': 100, 'seed':0, 'colsample_bytree': 0.8, 
@@ -210,28 +210,28 @@ if __name__ == "__main__":
 	#X_test, final = preprocess_test_lda(a_lda=lda)
 	#X, y, a_lda = preprocess_train_svc()
 	#X_test, final = preprocess_test_svc(a_lda)
-	#X, y = preprocess_train()
-	#X_test, final = preprocess_test()
+	X, y = preprocess_train()
+	X_test, final = preprocess_test()
 	#X = XX
 	#y = yy
 	#X_test = XX_test
 	#model = KNeighborsClassifier(n_neighbors=20)
 	#model = RandomForestClassifier(n_estimators=200, max_leaf_nodes=3, n_jobs=-1)
 	#model = DecisionTreeClassifier()
-	#model = xgb.XGBClassifier(**ind_params1)
+	model = xgb.XGBClassifier(**ind_params1)
 	#model = LogisticRegression(penalty='l2', C= 1)
 	#model = LinearSVC(C=0.1)
-	#validateUpSample(X, y, model)
+	validateUpSample(X, y, model)
 	#validateSmote(X, y, model)
 	#validateDownSample(X, y, model)
 	#dosmoteKfod(X, y, model)
 	#X, y = getSmote(X, y)
-	#X, y = upsample(X, y)
+	X, y = upsample(X, y)
 	#X, y = downsample(X, y)
-	#model.fit(X,y)
-	#pred = model.predict(X_test)
-	#print(len(pred[pred == 1]))
-	#createCSV(pred, final)
+	model.fit(X,y)
+	pred = model.predict(X_test)
+	print(len(pred[pred == 1]))
+	createCSV(pred, final)
 	#validate(X, y, model)
 	#model.fit(X, y)
 	#pred = model.predict(X_test)
@@ -245,7 +245,7 @@ if __name__ == "__main__":
 	#	print(name,  str(round(score, 5)))
 
 	#import the training set
-
+'''
 	X, y, a_lda = preprocess_train_svc()
 	X_test, final = preprocess_test_svc(a_lda)
 	X_xgb, y_xgb, lda = preprocess_train_lda(with_pca=True)
@@ -283,3 +283,4 @@ if __name__ == "__main__":
 
 	print(len(pred[pred == 1]))
 	createCSV(pred, final)
+'''
