@@ -99,6 +99,7 @@ def getColumns(X, cols):
 
 def dolda(X, y, unique):
 	lda = LinearDiscriminantAnalysis()
+	#X, y = getSmote(X, y)
 	pred = lda.fit_transform(X, y)
 	return pd.DataFrame(pred, columns=['lda'+unique]), lda
 

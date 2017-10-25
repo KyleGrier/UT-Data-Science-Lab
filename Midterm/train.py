@@ -259,24 +259,24 @@ if __name__ == "__main__":
 	xgb_model1 = xgb.XGBClassifier(**ind_params1)
 	xgb_model2 = xgb.XGBClassifier(**ind_params2)
 	log_model = LogisticRegression()
-
+	print('Start fit')
 	xgb_model1.fit(X_xgbs,y_xgbs)
-	xgb_model2.fit(X1s,y2s)
+	xgb_model2.fit(X2s,y2s)
 	log_model.fit(Xs,ys)
-
+	print('Start first predict')
 	xgb_pred_init1 = pd.DataFrame(xgb_model1.predict(X_xgb), columns = ['XGB'])
 	xgb_pred_init2 = pd.DataFrame(xgb_model1.predict(X2), columns = ['XGB2'])
 	log_pred_init = pd.DataFrame(log_model.predict(X), columns = ['log'])
 
 	train_this = pd.concat([log_pred_init, xgb_pred_init1, xgb_pred_init2], axis =1)
-
+	print('Start train')
 	fin_mod = LogisticRegression()
 	fin_mod.fit(train_this,ys)
-
+	print('Start next predict')
 	xgb_pred_test1 = pd.DataFrame(xgb_model1.predict(X_test_xgb), columns = ['XGB'])
 	xgb_pred_test2 = pd.DataFrame(xgb_model2.predict(X_test2), columns = ['XGB2'])
 	log_pred_test = pd.DataFrame(log_model.predict(X_test), columns = ['log'])
-
+	print('Almost done')
 	fin_pred = pd.concat([log_pred_test, xgb_pred_test1, xgb_pred_test2], axis=1)
 	pred = fin_mod.predict(fin_pred)
 
