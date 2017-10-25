@@ -8,6 +8,8 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.linear_model import LinearRegression
+from imblearn.over_sampling import SMOTE
+from sklearn.utils import resample
 
 # Fill the NaN locations for the columns given with the
 # replacement values given
@@ -70,8 +72,8 @@ def toscale(X):
 	scaler = StandardScaler()
 	X_scale = pd.DataFrame(scaler.fit_transform(X),columns=X.columns)
 	for col in X_scale.columns:
-		#X_scale[col] = scaler.fit_transform(np.log1p(X[col] + abs(X[col])).values.reshape(-1,1))
-		X_scale[col] = np.log1p(X[col] + abs(X[col]))
+		X_scale[col] = scaler.fit_transform(np.sqrt(np.log1p(X[col] + abs(X[col]))).values.reshape(-1,1))
+		#X_scale[col] = np.log1p(X[col] + abs(X[col]))
 	return X_scale
 
 def printSkew(X):
@@ -95,10 +97,10 @@ def getColumns(X, cols):
 	X_other = X.loc[:, cols]
 	return X_other
 
-def dolda(X, y):
+def dolda(X, y, unique):
 	lda = LinearDiscriminantAnalysis()
 	pred = lda.fit_transform(X, y)
-	return pd.DataFrame(pred, columns=['lda']), lda
+	return pd.DataFrame(pred, columns=['lda'+unique]), lda
 
 def getPoly(X, degree, unique):
 
@@ -110,62 +112,34 @@ def getPoly(X, degree, unique):
 	poly = poly.drop(columns[0], 1)
 	return poly
 
+def getSmote(X, y):
+	X_resampled, y_resampled = SMOTE().fit_sample(X, y)
+	X_resampled = pd.DataFrame(X_resampled, columns=X.columns)
+	y_resampled = pd.DataFrame(y_resampled.ravel(), columns=[y.name])
+	return X_resampled, y_resampled
+
+def upsample(X, y):
+	df = pd.concat([X,y], axis=1)
+	df_0 = df[df['Y']==0]
+	df_1 = df[df['Y']==1]
+	df_1 = resample(df_1, replace=True, n_samples=len(df_0), random_state=123)
+	df = pd.concat([df_0, df_1])
+	X = df.drop(['Y'], 1)
+	y = pd.DataFrame(df.Y, columns=[y.name])
+	return X, y
+
+def downsample(X, y):
+	df = pd.concat([X,y], axis=1)
+	df_0 = df[df['Y']==0]
+	df_1 = df[df['Y']==1]
+	df_0 = resample(df_0, replace=False, n_samples=len(df_1), random_state=123)
+	df = pd.concat([df_0, df_1])
+	X = df.drop(['Y'], 1)
+	y = pd.DataFrame(df.Y, columns=[y.name])
+	return X, y
+
 # Do preprocessing for the training set
 def preprocess_train_lda(with_pca=False):
-	train = pd.read_csv("train_final.csv")
-	X, y = getXy(train)
-	cols = ['F5', 'F19']
-	replace = [0.0, 0]
-	X = fixNaN(X, cols, replace)
-	worst_cols = ('F1','F4','F7','F8','F12','F13', 'F15', 'F17', 'F20', 'F21', 'F24')
-	best_cols = ('F2', 'F3', 'F14', 'F23', 'F25')
-	#best_cols = ('F2', 'F14', 'F26')
-	#corr_cols = ('F2', 'F14', 'F18','F25', 'F26')
-	X = toscale(X)
-	X_worst = getColumns(X, worst_cols)
-	X_worst = featPCA(X_worst, 1, 'worst')
-	X_worst = getPoly(X_worst, 2, 'worst')
-	X_best = getColumns(X, best_cols)
-	X_best, lda = dolda(X_best, y)
-	X_best = getPoly(X_best, 2, 'best')
-	X = removeCols(X, list(worst_cols))
-	#X = removeCols(X, list(best_cols))
-	if with_pca:
-		X = featPCA(X, 6, 'better', verbose=True)
-	X = pd.concat([X, X_worst, X_best], axis=1)
-	return X, y, lda
-
-# Do preprocessing for the test set
-def preprocess_test_lda(with_pca=False, a_lda = None):
-	test = pd.read_csv("test_final.csv")
-	X, final = getXid(test)
-	# cols and replace have to be same length
-	cols = ['F5','F19']
-	replace = [0.0, 0]
-	X = fixNaN(X, cols, replace)
-	worst_cols = ('F1','F4','F7','F8','F12','F13', 'F15', 'F17', 'F20', 'F21', 'F24')
-	best_cols = ('F2', 'F3', 'F14', 'F23', 'F25')
-	#best_cols = ('F2', 'F14', 'F26')
-	#corr_cols = ('F2', 'F14', 'F18','F25', 'F26')
-	X = toscale(X)
-	X_worst = getColumns(X, worst_cols)
-	X_worst = featPCA(X_worst, 1, 'worst')
-	X_worst = getPoly(X_worst, 2, 'worst')
-	X_best = getColumns(X, best_cols)
-	if a_lda:
-		X_best = pd.DataFrame(a_lda.transform(X_best), columns=['lda'])
-	else:
-		X_best = featPCA(X_best, 1, 'best')
-	X_best = getPoly(X_best, 2, 'best')
-	X = removeCols(X, list(worst_cols))
-	#X = removeCols(X, list(best_cols))
-	if with_pca:
-		X = featPCA(X, 6, 'better')
-	X = pd.concat([X, X_worst, X_best], axis=1)
-	return X, final
-
-# Do preprocessing for the training set
-def preprocess_train():
 	train = pd.read_csv("train_final.csv")
 	X, y = getXy(train)
 	cols = ['F5', 'F19']
@@ -176,15 +150,56 @@ def preprocess_train():
 	best_cols = ('F2', 'F14', 'F26')
 	#corr_cols = ('F2', 'F14', 'F18','F25', 'F26')
 	X = toscale(X)
-	X_worst = getColumns(X, worst_cols)
-	X_worst = featPCA(X_worst, 1, 'worst')
-	#X_worst = getPoly(X_worst, 2, 'worst')
 	X_best = getColumns(X, best_cols)
+	X_best, lda = dolda(X_best, y, 'best')
 	#X_best = getPoly(X_best, 2, 'best')
-	X_other = removeCols(X, list(worst_cols))
-	X_other = removeCols(X_other, list(best_cols))
-	X_other = featPCA(X_other, 6, 'better',verbose=True)
-	X = pd.concat([X_other, X_worst, X_best], axis=1)
+	X = removeCols(X, list(worst_cols))
+	X = removeCols(X, list(best_cols))
+	X = featPCA(X, 6, 'better', verbose=True)
+	X = pd.concat([X, X_best], axis=1)
+	return X, y, lda
+
+# Do preprocessing for the test set
+def preprocess_test_lda(a_lda = None):
+	test = pd.read_csv("test_final.csv")
+	X, final = getXid(test)
+	# cols and replace have to be same length
+	cols = ['F5','F19']
+	replace = [0.0, 0]
+	X = fixNaN(X, cols, replace)
+	worst_cols = ('F1','F4','F7','F8','F12','F13', 'F15', 'F17', 'F20', 'F21', 'F24')
+	#best_cols = ('F2', 'F3', 'F14', 'F23', 'F25')
+	best_cols = ('F2', 'F14', 'F26')
+	#corr_cols = ('F2', 'F14', 'F18','F25', 'F26')
+	X = toscale(X)
+	X_best = getColumns(X, best_cols)
+	if a_lda:
+		X_best = pd.DataFrame(a_lda.transform(X_best), columns=['ldabest'])
+	else:
+		X_best = featPCA(X_best, 1, 'best')
+	#X_best = getPoly(X_best, 2, 'best')
+	X = removeCols(X, list(worst_cols))
+	X = removeCols(X, list(best_cols))
+	X = featPCA(X, 6, 'better', verbose=True)
+	X = pd.concat([X, X_best], axis=1)
+	return X, final
+
+# Do preprocessing for the training set
+def preprocess_train():
+	train = pd.read_csv("train_final.csv")
+	X, y = getXy(train)
+	cols = ['F5', 'F19']
+	replace = [0.0, 0]
+	X = fixNaN(X, cols, replace)
+	worst_cols = ('F1','F4','F7','F8','F12','F13', 'F15', 'F17', 'F20', 'F24')
+	#best_cols = ('F2', 'F3', 'F14', 'F23', 'F25')
+	best_cols = ('F2', 'F14', 'F26')
+	#corr_cols = ('F2', 'F14', 'F18','F25', 'F26')
+	X = removeCols(X, list(worst_cols))
+	X = toscale(X)
+	X = featPCA(X, 12, 'better', verbose=True)
+	#X, y = upsample(X, y)
+	#X = getPoly(X, 2, 'best')
 	return X, y
 
 # Do preprocessing for the test set
@@ -195,20 +210,64 @@ def preprocess_test():
 	cols = ['F5','F19']
 	replace = [0.0, 0]
 	X = fixNaN(X, cols, replace)
-	worst_cols = ('F1','F4','F7','F8','F12','F13', 'F15', 'F17', 'F20', 'F21', 'F24')
+	worst_cols = ('F1','F4','F7','F8','F12','F13', 'F15', 'F17', 'F20', 'F24')
 	#best_cols = ('F2', 'F3', 'F14', 'F23', 'F25')
 	best_cols = ('F2', 'F14', 'F26')
 	#corr_cols = ('F2', 'F14', 'F18','F25', 'F26')
+	X = removeCols(X, list(worst_cols))
 	X = toscale(X)
-	X_worst = getColumns(X, worst_cols)
-	X_worst = featPCA(X_worst, 1, 'worst')
-	#X_worst = getPoly(X_worst, 2, 'worst')
+	X = featPCA(X, 12, 'better', verbose=True)
+	return X, final
+
+# Do preprocessing for the training set
+def preprocess_train_svc():
+	train = pd.read_csv("train_final.csv")
+	X, y = getXy(train)
+	cols = ['F5', 'F19']
+	replace = [0.0, 0]
+	X = fixNaN(X, cols, replace)
+	#worst_cols = ('F1','F4','F7','F8','F12','F13', 'F15', 'F17', 'F20', 'F21', 'F24')
+	worst_cols = ('F1','F4','F7','F8','F12','F13')
+	#best_cols = ('F2', 'F3', 'F14', 'F23', 'F25')
+	best_cols = ('F2', 'F14')
+	#best_cols = ('F3', 'F23')
+	next_cols = ('F3', 'F23', 'F25', 'F26', 'F19')
+	#corr_cols = ('F2', 'F14', 'F18','F25', 'F26')
+	X = toscale(X)
 	X_best = getColumns(X, best_cols)
-	#X_best = getPoly(X_best, 2, 'best')
-	X_other = removeCols(X, list(worst_cols))
-	X_other = removeCols(X_other, list(best_cols))
-	X_other = featPCA(X_other, 6, 'better')
-	X = pd.concat([X_other, X_worst, X_best], axis=1)
+	#X_next = getColumns(X, next_cols)
+	#X_worst = getColumns(X, worst_cols)
+	#X_worst = featPCA(X_worst, 4, 'worst', verbose=True)
+	X_best, a_lda = dolda(X_best, y, 'best')
+	#X_next, b_lda = dolda(X_next, y, 'next')
+	X = pd.concat([X_best], axis=1)
+	#X = getPoly(X, 2, 'best')
+	return X, y, a_lda
+
+# Do preprocessing for the test set
+def preprocess_test_svc(a_lda):
+	test = pd.read_csv("test_final.csv")
+	X, final = getXid(test)
+	# cols and replace have to be same length
+	cols = ['F5','F19']
+	replace = [0.0, 0]
+	X = fixNaN(X, cols, replace)
+	#worst_cols = ('F1','F4','F7','F8','F12','F13', 'F15', 'F17', 'F20', 'F21', 'F24')
+	worst_cols = ('F1','F4','F7','F8','F12','F13')
+	#best_cols = ('F2', 'F3', 'F14', 'F23', 'F25')
+	best_cols = ('F2', 'F14')
+	#best_cols = ('F3', 'F23')
+	next_cols = ('F3', 'F23', 'F25', 'F26', 'F19')
+	#corr_cols = ('F2', 'F14', 'F18','F25', 'F26')
+	X = toscale(X)
+	X_best = getColumns(X, best_cols)
+	#X_next = getColumns(X, next_cols)
+	#X_worst = getColumns(X, worst_cols)
+	#X_worst = featPCA(X_worst, 4, 'worst', verbose=True)
+	X_best = pd.DataFrame(a_lda.transform(X_best), columns=['ldabest'])
+	#X_next = pd.DataFrame(b_lda.transform(X_next), columns=['next'])
+	X = pd.concat([X_best], axis=1)
+	#X = getPoly(X, 2, 'best')
 	return X, final
 
 #if __name__ == "__main__":

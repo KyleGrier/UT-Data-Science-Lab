@@ -6,7 +6,8 @@ import time
 from sklearn.metrics import accuracy_score
 from sklearn.linear_model import LogisticRegression, Ridge, RidgeCV, Lasso, LassoCV
 from sklearn.model_selection import train_test_split, StratifiedKFold, cross_val_score
-from preprocess import preprocess_train, preprocess_test, featPCA, printSkew, preprocess_train_lda, preprocess_test_lda
+from preprocess import preprocess_train, preprocess_test, featPCA, printSkew, preprocess_train_lda
+from preprocess import preprocess_test_lda, getSmote, upsample, downsample, preprocess_train_svc, preprocess_test_svc 
 from sklearn.model_selection import GridSearchCV
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.svm import LinearSVC
@@ -16,7 +17,9 @@ from sklearn.svm import SVC
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, f1_score
+from collections import Counter
+from sklearn.svm import SVC
 
 #Get base accuracy
 #all_zero = np.zeros(train['id'].count())
@@ -44,11 +47,15 @@ cv_params = {'learning_rate': [0.1, 0.01], 'subsample': [0.7,0.8,0.9]}
 param_test1 = {
  'min_child_weight':[3,4,5,6,7]}
 
-ind_params = {'n_estimators': 1000, 'seed':0, 'colsample_bytree': 0.8, 
-             'objective': 'binary:logistic','nthread':16, 'max_depth' :4,
-             'learning_rate':0.1, 'subsample':0.4, 'min_child_weight':4,
+ind_params1 = {'n_estimators': 3000, 'seed':0, 'colsample_bytree': 0.8, 
+             'objective': 'binary:logistic','nthread':16, 'max_depth' :5,
+             'learning_rate':0.01, 'subsample':0.5, 'min_child_weight':3,
              'gamma':0}
 
+ind_params2 = {'n_estimators': 10000, 'seed':0, 'colsample_bytree': 0.8, 
+             'objective': 'binary:logistic','nthread':16, 'max_depth' :5,
+             'learning_rate':0.01, 'subsample':0.5, 'min_child_weight':3,
+             'gamma':0}
 def doGridCV(X,y):
 	opt_xgb = GridSearchCV(xgb.XGBClassifier(**ind_params), 
 	                            param_test1, 
@@ -72,6 +79,15 @@ def doKfold(X,y, model):
 	    print(accuracy_score(y.iloc[test_idx], y_pred))
 	elapsed = time.time() - start
 	print(elapsed)
+
+def dosmoteKfod(X, y, model):
+	kf = StratifiedKFold(n_splits=5, random_state=1)
+	for train_idx, test_idx in kf.split(X,y):
+		X_train, y_train = getSmote(X.iloc[train_idx], y.iloc[train_idx])
+		model.fit(X_train, y_train)
+		y_pred = model.predict(X.iloc[test_idx])
+		print(accuracy_score(y.iloc[test_idx], y_pred))
+		print(confusion_matrix(y.iloc[test_idx], y_pred))
 
 def doKfoldXGB(X,y):
 	kf = StratifiedKFold(n_splits=5, random_state=1)
@@ -146,75 +162,118 @@ def plotLDA(X, y):
 	ax.scatter(label2_sk, np.ones(len(label2_sk)), c='b', marker='x', label="label2")
 	ax.legend()
 	plt.show()
+
 def validate(X, y, model):
 	X_train, X_test, y_train, y_test = train_test_split(X,y,test_size=0.25,stratify=y,random_state=0)
 	model.fit(X_train, y_train)
 	pred = model.predict(X_test)
 	print(accuracy_score(y_test, pred))
 	print(confusion_matrix(y_test, pred))
+	print(f1_score(y_test, pred))
+
+def validateSmote(X, y, model):
+	X_train, X_test, y_train, y_test = train_test_split(X,y,test_size=0.25,stratify=y,random_state=0)
+	columns = X_train.columns
+	X_train, y_train = getSmote(X_train, y_train)
+	model.fit(X_train, y_train)
+	pred = model.predict(X_test)
+	print(accuracy_score(y_test, pred))
+	print(confusion_matrix(y_test, pred))
+	print(f1_score(y_test, pred))
+	#for name, score in zip(X_train.columns, model.feature_importances_*10):
+	#	print(name, score)
+
+def validateUpSample(X, y, model):
+	X_train, X_test, y_train, y_test = train_test_split(X,y,test_size=0.25,stratify=y,random_state=0)
+	columns = X_train.columns
+	X_train, y_train = upsample(X_train, y_train)
+	model.fit(X_train, y_train)
+	pred = model.predict(X_test)
+	print(accuracy_score(y_test, pred))
+	print(confusion_matrix(y_test, pred))
+	print(f1_score(y_test, pred))
+
+def validateDownSample(X, y, model):
+	X_train, X_test, y_train, y_test = train_test_split(X,y,test_size=0.25,stratify=y,random_state=0)
+	columns = X_train.columns
+	X_train, y_train = downsample(X_train, y_train)
+	model.fit(X_train, y_train)
+	pred = model.predict(X_test)
+	print(accuracy_score(y_test, pred))
+	print(confusion_matrix(y_test, pred))
+	print(f1_score(y_test, pred))
 
 if __name__ == "__main__":
-	'''
+	
 	#import the training set
-	#X, y, lda = preprocess_train_lda(with_pca=False)
-	#X_test, final = preprocess_test_lda(with_pca=False, a_lda=lda)
-	XX, yy, llda = preprocess_train_lda(with_pca=True)
-	XX_test, final = preprocess_test_lda(with_pca=True, a_lda=llda)
-	#X, y = preprocess_train()
-	#X_test, final = preprocess_test()
-	X = XX
-	y = yy
-	X_test = XX_test
-	model = KNeighborsClassifier(n_neighbors=5)
-	#model = RandomForestClassifier(n_estimators=500, max_leaf_nodes=5, n_jobs=-1)
+	#X, y, lda = preprocess_train_lda()
+	#X_test, final = preprocess_test_lda(a_lda=lda)
+	#X, y, a_lda = preprocess_train_svc()
+	#X_test, final = preprocess_test_svc(a_lda)
+	X, y = preprocess_train()
+	X_test, final = preprocess_test()
+	#X = XX
+	#y = yy
+	#X_test = XX_test
+	#model = KNeighborsClassifier(n_neighbors=20)
+	#model = RandomForestClassifier(n_estimators=200, max_leaf_nodes=3, n_jobs=-1)
 	#model = DecisionTreeClassifier()
-	#model = createXGB(X, y)
-	#model = LogisticRegression(penalty='l2', C= 18)
-	validate(X, y, model)
-	model.fit(X, y)
+	model = xgb.XGBClassifier(**ind_params2)
+	#model = LogisticRegression(penalty='l2', C= 1)
+	#model = LinearSVC(C=0.1)
+	#validateUpSample(X, y, model)
+	validateSmote(X, y, model)
+	#validateDownSample(X, y, model)
+	#dosmoteKfod(X, y, model)
+	X, y = getSmote(X, y)
+	#X, y = upsample(X, y)
+	#X, y = downsample(X, y)
+	model.fit(X,y)
 	pred = model.predict(X_test)
+	print(len(pred[pred == 1]))
+	createCSV(pred, final)
+	#validate(X, y, model)
+	#model.fit(X, y)
+	#pred = model.predict(X_test)
 	#print(model.coef_)
 	#for name, score in zip(X.columns, model.feature_importances_*10):
 	#	print(name, score)
 	#doKfold(X, y, model)
-	print(len(pred[pred == 1]))
-	createCSV(pred, final)
+	#print(len(pred[pred == 1]))
+	#createCSV(pred, final)
 	#for name, score in zip(X.columns, (rnd_clf.feature_importances_*10)):
 	#	print(name,  str(round(score, 5)))
-	'''
+
+
+
+'''
 	#import the training set
-	X, y = preprocess_train()
-	X_test, final = preprocess_test()
+	X, y, a_lda = preprocess_train_svc()
+	X_test, final = preprocess_test_svc(a_lda)
 	X_xgb, y_xgb, lda = preprocess_train_lda(with_pca=True)
 	X_test_xgb, final = preprocess_test_lda(with_pca=True, a_lda=lda)
 
-	xgb_model = createXGB(X_xgb, y_xgb)
-	log_model = LogisticRegression(penalty='l2', C= 18)
-	nn_model = KNeighborsClassifier(n_neighbors=3)
-	#for_model = RandomForestClassifier(n_estimators=500, max_leaf_nodes=16, n_jobs=-1)
+	xgb_model1 = xgb.XGBClassifier(**ind_params1)
+	xgb_model2 = xgb.XGBClassifier(**ind_params2)
+	log_model = LogisticRegression()
 
-	xgb_model.fit(X_xgb,y_xgb)
-	nn_model.fit(X,y)
+	xgb_model1.fit(X_xgb,y_xgb)
 	log_model.fit(X,y)
-	#for_model.fit(X,y)
 
-	xgb_pred_init = pd.DataFrame(xgb_model.predict(X_xgb), columns = ['XGB'])
-	nn_pred_init = pd.DataFrame(nn_model.predict(X), columns = ['NN'])
+	xgb_pred_init1 = pd.DataFrame(xgb_model1.predict(X_xgb), columns = ['XGB'])
 	log_pred_init = pd.DataFrame(log_model.predict(X), columns = ['log'])
-	#for_pred_init = pd.DataFrame(for_model.predict(X), columns = ['for'])
 
-	train_this = pd.concat([nn_pred_init, log_pred_init, xgb_pred_init],axis =1)
+	train_this = pd.concat([log_pred_init, xgb_pred_init],axis =1)
 
 	fin_mod = LogisticRegression()
 	fin_mod.fit(train_this,y)
 
-	xgb_pred_test = pd.DataFrame(xgb_model.predict(X_test_xgb), columns = ['XGB'])
-	nn_pred_test = pd.DataFrame(nn_model.predict(X_test), columns = ['NN'])
+	xgb_pred_test1 = pd.DataFrame(xgb_model1.predict(X_test_xgb), columns = ['XGB'])
 	log_pred_test = pd.DataFrame(log_model.predict(X_test), columns = ['log'])
-	#for_pred_test = pd.DataFrame(for_model.predict(X_test), columns = ['for'])
 
-	fin_pred = pd.concat([nn_pred_test, log_pred_test, xgb_pred_test], axis=1)
+	fin_pred = pd.concat([log_pred_test, xgb_pred_test1], axis=1)
 	pred = fin_mod.predict(fin_pred)
 
 	print(len(pred[pred == 1]))
 	createCSV(pred, final)
+'''
