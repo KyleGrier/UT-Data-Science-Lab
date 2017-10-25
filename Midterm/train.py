@@ -221,7 +221,7 @@ if __name__ == "__main__":
 	model = xgb.XGBClassifier(**ind_params1)
 	#model = LogisticRegression(penalty='l2', C= 1)
 	#model = LinearSVC(C=0.1)
-	validateUpSample(X, y, model)
+	#validateUpSample(X, y, model)
 	#validateSmote(X, y, model)
 	#validateDownSample(X, y, model)
 	#dosmoteKfod(X, y, model)
