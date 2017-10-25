@@ -245,6 +245,7 @@ if __name__ == "__main__":
 	#	print(name,  str(round(score, 5)))
 
 	#import the training set
+
 	X, y, a_lda = preprocess_train_svc()
 	X_test, final = preprocess_test_svc(a_lda)
 	X_xgb, y_xgb, lda = preprocess_train_lda(with_pca=True)
@@ -265,7 +266,7 @@ if __name__ == "__main__":
 	log_model.fit(Xs,ys)
 	print('Start first predict')
 	xgb_pred_init1 = pd.DataFrame(xgb_model1.predict(X_xgb), columns = ['XGB'])
-	xgb_pred_init2 = pd.DataFrame(xgb_model1.predict(X2), columns = ['XGB2'])
+	xgb_pred_init2 = pd.DataFrame(xgb_model2.predict(X2), columns = ['XGB2'])
 	log_pred_init = pd.DataFrame(log_model.predict(X), columns = ['log'])
 
 	train_this = pd.concat([log_pred_init, xgb_pred_init1, xgb_pred_init2], axis =1)
