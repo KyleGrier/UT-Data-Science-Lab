@@ -210,28 +210,28 @@ if __name__ == "__main__":
 	#X_test, final = preprocess_test_lda(a_lda=lda)
 	#X, y, a_lda = preprocess_train_svc()
 	#X_test, final = preprocess_test_svc(a_lda)
-	X, y = preprocess_train()
-	X_test, final = preprocess_test()
+	#X, y = preprocess_train()
+	#X_test, final = preprocess_test()
 	#X = XX
 	#y = yy
 	#X_test = XX_test
 	#model = KNeighborsClassifier(n_neighbors=20)
 	#model = RandomForestClassifier(n_estimators=200, max_leaf_nodes=3, n_jobs=-1)
 	#model = DecisionTreeClassifier()
-	model = xgb.XGBClassifier(**ind_params1)
+	#model = xgb.XGBClassifier(**ind_params1)
 	#model = LogisticRegression(penalty='l2', C= 1)
 	#model = LinearSVC(C=0.1)
 	#validateUpSample(X, y, model)
-	validateSmote(X, y, model)
+	#validateSmote(X, y, model)
 	#validateDownSample(X, y, model)
 	#dosmoteKfod(X, y, model)
-	X, y = getSmote(X, y)
+	#X, y = getSmote(X, y)
 	#X, y = upsample(X, y)
 	#X, y = downsample(X, y)
-	model.fit(X,y)
-	pred = model.predict(X_test)
-	print(len(pred[pred == 1]))
-	createCSV(pred, final)
+	#model.fit(X,y)
+	#pred = model.predict(X_test)
+	#print(len(pred[pred == 1]))
+	#createCSV(pred, final)
 	#validate(X, y, model)
 	#model.fit(X, y)
 	#pred = model.predict(X_test)
@@ -244,37 +244,37 @@ if __name__ == "__main__":
 	#for name, score in zip(X.columns, (rnd_clf.feature_importances_*10)):
 	#	print(name,  str(round(score, 5)))
 
-
-
-'''
 	#import the training set
 	X, y, a_lda = preprocess_train_svc()
 	X_test, final = preprocess_test_svc(a_lda)
 	X_xgb, y_xgb, lda = preprocess_train_lda(with_pca=True)
-	X_test_xgb, final = preprocess_test_lda(with_pca=True, a_lda=lda)
-	
-	X_xgb, y_xgb = getSmote(X_xgb, y_xgb)
-	X_xgb, y_xgb = getSmote(X, y)
+	X_test_xgb, final = preprocess_test_lda(a_lda=lda)
+	X2, y2 = preprocess_train()
+	X_test2, final = preprocess_test()
+
+	X_xgbs, y_xgbs = getSmote(X_xgb, y_xgb)
+	Xs, ys = getSmote(X, y)
+	X2s, y2s = getSmote(X2, y2)
 
 	xgb_model1 = xgb.XGBClassifier(**ind_params1)
 	xgb_model2 = xgb.XGBClassifier(**ind_params2)
 	log_model = LogisticRegression()
 
-	xgb_model1.fit(X_xgb,y_xgb)
-	xgb_model2.fit(X_xgb,y_xgb)
-	log_model.fit(X,y)
+	xgb_model1.fit(X_xgbs,y_xgbs)
+	xgb_model2.fit(X1s,y2s)
+	log_model.fit(Xs,ys)
 
 	xgb_pred_init1 = pd.DataFrame(xgb_model1.predict(X_xgb), columns = ['XGB'])
-	xgb_pred_init2 = pd.DataFrame(xgb_model1.predict(X_xgb), columns = ['XGB2'])
+	xgb_pred_init2 = pd.DataFrame(xgb_model1.predict(X2), columns = ['XGB2'])
 	log_pred_init = pd.DataFrame(log_model.predict(X), columns = ['log'])
 
-	train_this = pd.concat([log_pred_init, xgb_pred_init1, xgb_pred_init2],axis =1)
+	train_this = pd.concat([log_pred_init, xgb_pred_init1, xgb_pred_init2], axis =1)
 
 	fin_mod = LogisticRegression()
-	fin_mod.fit(train_this,y)
+	fin_mod.fit(train_this,ys)
 
 	xgb_pred_test1 = pd.DataFrame(xgb_model1.predict(X_test_xgb), columns = ['XGB'])
-	xgb_pred_test2 = pd.DataFrame(xgb_model2.predict(X_test_xgb), columns = ['XGB2'])
+	xgb_pred_test2 = pd.DataFrame(xgb_model2.predict(X_test2), columns = ['XGB2'])
 	log_pred_test = pd.DataFrame(log_model.predict(X_test), columns = ['log'])
 
 	fin_pred = pd.concat([log_pred_test, xgb_pred_test1, xgb_pred_test2], axis=1)
@@ -282,4 +282,3 @@ if __name__ == "__main__":
 
 	print(len(pred[pred == 1]))
 	createCSV(pred, final)
-'''
