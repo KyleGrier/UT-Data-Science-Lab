@@ -218,7 +218,7 @@ if __name__ == "__main__":
 	#model = KNeighborsClassifier(n_neighbors=20)
 	#model = RandomForestClassifier(n_estimators=200, max_leaf_nodes=3, n_jobs=-1)
 	#model = DecisionTreeClassifier()
-	model = xgb.XGBClassifier(**ind_params2)
+	model = xgb.XGBClassifier(**ind_params1)
 	#model = LogisticRegression(penalty='l2', C= 1)
 	#model = LinearSVC(C=0.1)
 	#validateUpSample(X, y, model)
