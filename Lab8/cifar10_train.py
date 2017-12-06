@@ -63,6 +63,7 @@ def train():
     # GPU and resulting in a slow down.
     with tf.device('/cpu:0'):
       images, labels = cifar10.distorted_inputs()
+      #images, labels = cifar10.inputs()
 
     # Build a Graph that computes the logits predictions from the
     # inference model.
